@@ -1,10 +1,10 @@
-# ofxRealsense - openFrameworks addon for working with Intel Realsense 415,435,435i cameras.
+# ofxRealsense - openFrameworks addon for working with Intel Realsense 415,435,435i cameras
 
 Author: Denis Perevalov
 
 
 
-##Credits
+## Credits
 
 During development, I used ideas and links from analogous addons: 
 * https://github.com/hiroMTB/ofxRealsense2 
@@ -13,7 +13,7 @@ During development, I used ideas and links from analogous addons:
 but designed addon by my own taste.
 
 
-##Supported OS, oF
+## Supported OS, oF
 
 Windows 10, oF 0.10.1, Visual Studio C++ 2017, 64/32 bit
 

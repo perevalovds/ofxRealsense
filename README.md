@@ -11,7 +11,6 @@ No additional installation is required.
 In *docs* folder see Intel's document describing camera specifics.
 
 In *tools* folder located *realsense-viewer.exe* file from Intel SDK for checking that camera is working. 
-Also, there is full Intel's SDK used in this addon's implementations.
 
 ## Credits
 

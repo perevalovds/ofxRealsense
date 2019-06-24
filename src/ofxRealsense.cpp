@@ -11,7 +11,7 @@
 }*/
 
 //--------------------------------------------------------------
-vector<string> ofxRealsense::get_serials() {	//get list of connected devices' serial numbers
+vector<string> ofxRealsense::get_serials() {	//get list of availble devices serial numbers
 	vector<string> list;
 
 	rs2::context ctx;    // Create librealsense context for managing devices
@@ -27,12 +27,10 @@ vector<string> ofxRealsense::get_serials() {	//get list of connected devices' se
 
 //--------------------------------------------------------------
 
-void ofxRealsense::setup(string serial, int use_depth, int use_color, int use_ir, int w, int h, int fps, int disable_ir_emitter) {	    //connect cameras
+void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {	    //connect cameras
 	serial_ = serial;
-
-	use_depth_ = use_depth;
-	use_color_ = use_color;
-	use_ir_ = use_ir;
+	settings_ = settings;
+	ofxRealsense_Settings &S = settings_;
 
 	auto &ctx = ofxRealsense_ctx;
 
@@ -50,14 +48,14 @@ void ofxRealsense::setup(string serial, int use_depth, int use_color, int use_ir
 
 			//Start streams
 			c.disable_all_streams();
-			if (use_depth_) {
-				c.enable_stream(RS2_STREAM_DEPTH, w, h, RS2_FORMAT_ANY, fps);
+			if (S.use_depth) {
+				c.enable_stream(RS2_STREAM_DEPTH, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
 			}
-			if (use_color_) {	//TODO color format can differ from depth
-				c.enable_stream(RS2_STREAM_COLOR, w, h, RS2_FORMAT_ANY, fps);
+			if (S.use_rgb) {	
+				c.enable_stream(RS2_STREAM_COLOR, S.rgb_w, S.rgb_h, RS2_FORMAT_ANY, S.rgb_fps);
 			}
-			if (use_ir_) {
-				c.enable_stream(RS2_STREAM_INFRARED, w, h, RS2_FORMAT_ANY, fps);
+			if (S.use_ir) {
+				c.enable_stream(RS2_STREAM_INFRARED, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
 			}
 			__log__("resolution " + ofToString(w) + " " + ofToString(h) + " " + ofToString(fps));
 
@@ -72,7 +70,7 @@ void ofxRealsense::setup(string serial, int use_depth, int use_color, int use_ir
 			auto depth_sensor = selected_device.first<rs2::depth_sensor>();
 
 			if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
-				depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, 1 - disable_ir_emitter);//on/off emitter
+				depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
 			}
 			//if (depth_sensor.supports(RS2_OPTION_LASER_POWER)) {
 			//	depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
@@ -119,21 +117,23 @@ void ofxRealsense::close() {
 void ofxRealsense::update() {
 	frameNew_ = false;
 
-	std::lock_guard<std::mutex> lock(ofxRealsense_mutex_);
 	if (device_.connected) {
+		ofxRealsense_Settings &S = settings_;
+
+		std::lock_guard<std::mutex> lock(ofxRealsense_mutex_);
 		// Ask each pipeline if there are new frames available
 		rs2::frameset frameset;
 		if (device_.pipe.poll_for_frames(&frameset)) {
 			frameNew_ = true;
-			if (use_depth_) {
+			if (S.use_depth) {
 				auto depth = frameset.get_depth_frame();
 				device_.points = device_.pc.calculate(depth);			//TODO not compute texture coordinates
 				device_.depth = depth;
 			}
-			if (use_color_) {
+			if (S.use_rgb) {
 				device_.color_frame = frameset.get_color_frame();
 			}
-			if (use_ir_) {
+			if (S.use_ir) {
 				device_.ir_frame = frameset.get_infrared_frame(0);	//TODO choose 0,1
 			}
 
@@ -167,7 +167,7 @@ bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc) {				//get point cloud
 			auto *v = points.get_vertices();
 			for (int k = 0; k < size; k++) {
 				auto V = v[k];
-				pc[k] = glm::vec3(V.x * 1000, -V.y * 1000, V.z * 1000);
+				pc[k] = glm::vec3(V.x * 1000, V.y * 1000, V.z * 1000);
 			}
 		}
 		return true;
@@ -243,7 +243,7 @@ bool ofxRealsense::frame_to_pixels_rgb(const rs2::video_frame& frame, int &w, in
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_depth_texture(ofTexture &texture) {	//get depth texture for connected device i
-	if (!use_depth_) return false;
+	if (!settings_.use_depth) return false;
 	if (device_.connected && device_.depth.get()) {
 		auto frame = device_.colorize_frame.process(device_.depth).as<rs2::video_frame>();
 		return frame_to_texture(frame, texture);
@@ -253,7 +253,7 @@ bool ofxRealsense::get_depth_texture(ofTexture &texture) {	//get depth texture f
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_color_texture(ofTexture &texture) {	//get color texture for connected device
-	if (!use_color_) return false;
+	if (!settings_.use_rgb) return false;
 	if (device_.connected && device_.color_frame.get()) {
 		return frame_to_texture(device_.color_frame, texture);
 	}
@@ -262,7 +262,7 @@ bool ofxRealsense::get_color_texture(ofTexture &texture) {	//get color texture f
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_ir_texture(ofTexture &texture) {		//get ir texture for connected device
-	if (!use_ir_) return false;
+	if (!settings_.use_ir) return false;
 	if (device_.connected && device_.ir_frame.get()) {
 		auto frame = device_.colorize_frame.process(device_.ir_frame).as<rs2::video_frame>();
 		return frame_to_texture(frame, texture);
@@ -272,7 +272,7 @@ bool ofxRealsense::get_ir_texture(ofTexture &texture) {		//get ir texture for co
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_depth_pixels_rgb(int &w, int &h, vector<unsigned char> &data) {
-	if (!use_depth_) return false;
+	if (!settings_.use_depth) return false;
 	if (device_.connected && device_.depth.get()) {
 		auto frame = device_.colorize_frame.process(device_.depth).as<rs2::video_frame>();
 		return frame_to_pixels_rgb(frame, w, h, data);
@@ -283,7 +283,7 @@ bool ofxRealsense::get_depth_pixels_rgb(int &w, int &h, vector<unsigned char> &d
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_color_pixels_rgb(int &w, int &h, vector<unsigned char> &data) {
-	if (!use_color_) return false;
+	if (!settings_.use_rgb) return false;
 	if (device_.connected && device_.color_frame.get()) {
 		return frame_to_pixels_rgb(device_.color_frame, w, h, data);
 	}
@@ -293,7 +293,7 @@ bool ofxRealsense::get_color_pixels_rgb(int &w, int &h, vector<unsigned char> &d
 
 //--------------------------------------------------------------
 bool ofxRealsense::get_ir_pixels_rgb(int &w, int &h, vector<unsigned char> &data) {
-	if (!use_ir_) return false;
+	if (!settings_.use_ir) return false;
 	if (device_.connected && device_.ir_frame.get()) {
 		auto frame = device_.colorize_frame.process(device_.ir_frame).as<rs2::video_frame>();
 		//__log__("calling frame_to_pixels_rgb");

@@ -3,6 +3,10 @@
 # ofxRealsense - openFrameworks addon for working with Intel Realsense 415,435,435i cameras.
 Supported OS: Windows.
 Made in oF 0.10.1
+
+
+Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
+
 */
 
 
@@ -12,6 +16,53 @@ Made in oF 0.10.1
 #include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 
 
+
+
+/*
+	Resolutions and framerates:
+	Depth/IR:
+	424x240
+	480x270
+	640x360
+	640x480
+	848x480
+	1280x720
+	1280x800
+	FPS: 6,15,25,30,60,90
+
+	RGB:
+	320x180
+	320x240
+	424x240
+	640x360
+	640x480
+	848x480
+	960x540
+	1280x720
+	1920x1080
+	FPS: 6,15,30,60
+
+*/
+
+
+//Settings for starting device
+struct ofxRealsense_Settings {
+	int use_depth = 1;
+	int use_ir = 1;
+	int use_rgb = 1;
+	int use_emitter = 1;
+
+	int depth_w = 640;
+	int depth_h = 480;
+	int depth_fps = 30;
+
+	int rgb_w = 640;
+	int rgb_h = 480;
+	int rgb_fps = 30;
+};
+
+
+//Holder for Realsense device structures
 struct ofxRealsense_Device
 {
 	bool connected = false;
@@ -31,31 +82,15 @@ struct ofxRealsense_Device
 };
 
 
-/*
-	Resolutions and framerates:
-	
-	424x240
-	480x270
-	640x360
-	640x480
-	848x480
-	1280x720
-	1280x800
 
-	6,15,25,30,60,90
-
-*/
-
-
+//High-level openFrameworks wrapper
 class ofxRealsense {
 public:
 
-	static vector<string> get_serials();	//get list of connected devices' serial numbers
+	static vector<string> get_serials();	//get list of availble devices serial numbers
 
-	////TODO color format can differ from depth
-	void setup(string serial, int use_depth, int use_color, int use_ir, 
-		int w=0, int h=0, int fps=0, int disable_ir_emitter=0);	    //connect cameras
-
+	//TODO settings for depth postprocessing and laser power
+	void setup(string serial, const ofxRealsense_Settings &settings);	    //connect camera
 
 	void update();
 	void close();
@@ -63,19 +98,15 @@ public:
 	string serial() { return serial_; }
 	bool connected() { return device_.connected; }
 
-	//TODO
-	//add function for returning if camera is actually connected
+
 
 	//TODO
 	//callback for connecting/disconnecting devices, see rs-multicam example in SDK
 	//auto reconnect if device was connected again
 
 	//TODO optimization
-	//disable RGB stream if not required
-	//not compute texture coordinates if not reauired
+	//not compute texture coordinates if not required
 
-	//TODO
-	//set FPS and resolution
 
 	bool get_point_cloud(vector<glm::vec3> &pc);	//get point cloud for connected device
 	bool get_depth_texture(ofTexture &texture);	//get depth texture for connected device
@@ -89,6 +120,7 @@ public:
 	bool isFrameNew() { return frameNew_;  }
 protected:
 	string serial_;
+	ofxRealsense_Settings settings_;
 
 	bool frameNew_ = false;
 
@@ -96,10 +128,6 @@ protected:
 	
 	rs2::context ofxRealsense_ctx;
 	ofxRealsense_Device device_;
-
-	int use_depth_ = 0;
-	int use_color_ = 0;
-	int use_ir_ = 0;
 
 	bool frame_to_texture(const rs2::video_frame& frame, ofTexture &texture);
 	bool frame_to_pixels_rgb(const rs2::video_frame& frame, int &w, int &h, vector<unsigned char> &data);

@@ -6,35 +6,35 @@
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	cout << "---------------------------" << endl;
+	cout << "ofxRealsense example-pointcloud example" << endl;
+	cout << "It shows point cloud, colored depth images, IR and RGB images" << endl;
+	cout << "Use mouse to rotate, scale and move point cloud, double click - reset to default position" << endl;
+	cout << "---------------------------" << endl;
+
+
 	vector<string> serials = ofxRealsense::get_serials();
 	cout << "Connected RealSense devices:" << endl;
 	for (int i = 0; i < serials.size(); i++) {
 		cout << i + 1 << ":\t" << serials[i] << endl;
 	}
 	if (serials.size() == 0) {
-		cout << "No devices!" << endl;
+		cout << "No connected RealSense devices!" << endl;
 	}
 	else {
 
 		/*
-		Resolutions and framerates:
-
-		424x240
-		480x270
-		640x360
-		640x480
-		848x480
-		1280x720
-		1280x800
-
-		6,15,25,30,60,90
-
+		See available resolutions and framerates at ofxRealsense.h comments
 		*/
-		int w = 848;
-		int h = 480;
-		int fps = 30;
+		ofxRealsense_Settings S;
+		S.depth_w = 848;
+		S.depth_h = 480;
+		S.depth_fps = 30;
+		S.rgb_w = 1920;
+		S.rgb_h = 1080;
+		S.rgb_fps = 30;
 
-		device_.setup(serials[0], w, h, fps);
+		device_.setup(serials[0], S);
 	}
 }
 
@@ -46,24 +46,6 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	ofBackground(0);
-
-	if (draw_points) {
-		ofMesh mesh;
-		cam.begin();
-
-		ofPushMatrix();
-		ofScale(0.1, -0.1, 0.1);
-
-		if (device_.connected()) {
-			vector<glm::vec3> &pc = mesh.getVertices();
-			device_.get_point_cloud(pc);
-
-			ofSetColor(255, 0, 0);
-			mesh.drawVertices();
-		}
-		ofPopMatrix();
-		cam.end();
-	}
 
 	if (draw_textures) {
 
@@ -82,6 +64,26 @@ void ofApp::draw(){
 				x += texture.getWidth() * scale + 20;
 			}
 		}
+	}
+
+
+
+	if (draw_points) {
+		ofMesh mesh;
+		cam.begin();
+
+		ofPushMatrix();
+		ofScale(0.1, -0.1, 0.1);
+
+		if (device_.connected()) {
+			vector<glm::vec3> &pc = mesh.getVertices();
+			device_.get_point_cloud(pc);
+
+			ofSetColor(255, 0, 0);
+			mesh.drawVertices();
+		}
+		ofPopMatrix();
+		cam.end();
 	}
 
 	ofDrawBitmapStringHighlight("FPS: " + ofToString(ofGetFrameRate(), 0), 20, 20);

@@ -19,7 +19,7 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 
 
 /*
-	Resolutions and framerates:
+	Available resolutions and framerates:
 	Depth/IR:
 	424x240
 	480x270

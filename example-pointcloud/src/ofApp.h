@@ -29,7 +29,7 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
-	ofxRealsense devices_;
+	ofxRealsense device_;
 
 	ofEasyCam cam;
 

@@ -50,18 +50,18 @@ struct ofxRealsense_Device
 class ofxRealsense {
 public:
 
-	static vector<string> get_serials();	//get list of serial numbers
+	static vector<string> get_serials();	//get list of connected devices' serial numbers
 
-	//TODO !!! KEEP ONE SERIAL
 	////TODO color format can differ from depth
-	void setup(vector<string> serials, int use_depth, int use_color, int use_ir, 
+	void setup(string serial, int use_depth, int use_color, int use_ir, 
 		int w=0, int h=0, int fps=0, int disable_ir_emitter=0);	    //connect cameras
 
 
 	void update();
 	void close();
 
-	int size() { return serials_.size(); }
+	string serial() { return serial_; }
+	bool connected() { return device_.connected; }
 
 	//TODO
 	//add function for returning if camera is actually connected
@@ -77,24 +77,25 @@ public:
 	//TODO
 	//set FPS and resolution
 
-	bool get_point_cloud(int i, vector<glm::vec3> &pc);	//get point cloud for connected device i
-	bool get_depth_texture(int i, ofTexture &texture);	//get depth texture for connected device i
-	bool get_color_texture(int i, ofTexture &texture);	//get color texture for connected device i
-	bool get_ir_texture(int i, ofTexture &texture);		//get ir texture for connected device i
+	bool get_point_cloud(vector<glm::vec3> &pc);	//get point cloud for connected device
+	bool get_depth_texture(ofTexture &texture);	//get depth texture for connected device
+	bool get_color_texture(ofTexture &texture);	//get color texture for connected device
+	bool get_ir_texture(ofTexture &texture);		//get ir texture for connected device
 
-	bool get_depth_pixels_rgb(int i, int &w, int &h, vector<unsigned char> &data);
-	bool get_color_pixels_rgb(int i, int &w, int &h, vector<unsigned char> &data);
-	bool get_ir_pixels_rgb(int i, int &w, int &h, vector<unsigned char> &data);
+	bool get_depth_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
+	bool get_color_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
+	bool get_ir_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
 
 	bool isFrameNew() { return frameNew_;  }
 protected:
-	vector<string> serials_;
+	string serial_;
 
 	bool frameNew_ = false;
 
 	std::mutex ofxRealsense_mutex_;
 	
-	vector<ofxRealsense_Device> ofxRealsense_devices_;
+	rs2::context ofxRealsense_ctx;
+	ofxRealsense_Device device_;
 
 	int use_depth_ = 0;
 	int use_color_ = 0;

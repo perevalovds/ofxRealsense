@@ -15,9 +15,6 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 
 #include <librealsense2/rs.hpp>     // Include RealSense Cross Platform API
 
-
-
-
 /*
 	Available resolutions and framerates:
 	Depth/IR:
@@ -41,7 +38,6 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 	1280x720
 	1920x1080
 	FPS: 6,15,30,60
-
 */
 
 
@@ -78,9 +74,7 @@ struct ofxRealsense_Device
 
 	rs2::frame color_frame;
 	rs2::frame ir_frame;
-
 };
-
 
 
 //High-level openFrameworks wrapper

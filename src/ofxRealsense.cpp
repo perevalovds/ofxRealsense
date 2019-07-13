@@ -108,9 +108,11 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 
 //--------------------------------------------------------------
 void ofxRealsense::close() {
-	//ofxRealsense_devices_.clear();
-	device_.pipe.stop();
-	device_.connected = false;
+	if (device_.connected) {
+		//ofxRealsense_devices_.clear();
+		device_.pipe.stop();
+		device_.connected = false;
+	}
 }
 
 //--------------------------------------------------------------

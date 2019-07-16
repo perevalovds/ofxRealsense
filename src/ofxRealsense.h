@@ -38,11 +38,22 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 	1280x720
 	1920x1080
 	FPS: 6,15,30,60
+
+	Visual presets:
+	RS2_RS400_VISUAL_PRESET_CUSTOM,            0
+	RS2_RS400_VISUAL_PRESET_DEFAULT,           1
+	RS2_RS400_VISUAL_PRESET_HAND,              2
+	RS2_RS400_VISUAL_PRESET_HIGH_ACCURACY,     3
+	RS2_RS400_VISUAL_PRESET_HIGH_DENSITY,      4
+	RS2_RS400_VISUAL_PRESET_MEDIUM_DENSITY,    5
+	RS2_RS400_VISUAL_PRESET_REMOVE_IR_PATTERN  6
 */
 
 
 //Settings for starting device
 struct ofxRealsense_Settings {
+	int visual_preset = 1;	//1 - DEFAULT
+
 	int use_depth = 1;
 	int use_ir = 1;
 	int use_rgb = 1;

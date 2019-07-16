@@ -46,32 +46,52 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 			used[k] = true;
 			rs2::config c;
 
+			device_.connected = false;	//setting it true later only if success
+	
 			//Start streams
-			c.disable_all_streams();
-			if (S.use_depth) {
-				c.enable_stream(RS2_STREAM_DEPTH, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
-			}
-			if (S.use_rgb) {	
-				c.enable_stream(RS2_STREAM_COLOR, S.rgb_w, S.rgb_h, RS2_FORMAT_ANY, S.rgb_fps);
-			}
-			if (S.use_ir) {
-				c.enable_stream(RS2_STREAM_INFRARED, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
-			}
-			__log__("resolution " + ofToString(w) + " " + ofToString(h) + " " + ofToString(fps));
+			try {
+				c.disable_all_streams();
+				if (S.use_depth) {
+					c.enable_stream(RS2_STREAM_DEPTH, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
+				}
+				if (S.use_rgb) {
+					c.enable_stream(RS2_STREAM_COLOR, S.rgb_w, S.rgb_h, RS2_FORMAT_ANY, S.rgb_fps);
+				}
+				if (S.use_ir) {
+					c.enable_stream(RS2_STREAM_INFRARED, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
+				}
+				__log__("resolution " + ofToString(w) + " " + ofToString(h) + " " + ofToString(fps));
 
-			//---------------------------------
-			c.enable_device(serial);
-			// Start the pipeline with the configuration
-			device_.profile = device_.pipe.start(c);
-			device_.connected = true;
+				//---------------------------------
+				c.enable_device(serial);
+				// Start the pipeline with the configuration
+				device_.profile = device_.pipe.start(c);
 
-			//disable emitter
-			rs2::device selected_device = device_.profile.get_device();
-			auto depth_sensor = selected_device.first<rs2::depth_sensor>();
+				//disable emitter
+				rs2::device selected_device = device_.profile.get_device();
+				auto depth_sensor = selected_device.first<rs2::depth_sensor>();
 
-			if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
-				depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
+				if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
+					depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
+				}
+
+				//Setting preset
+				if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
+					depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
+
+					//High accuracy preset
+					//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_ACCURACY);
+					//High density preset
+					//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_DENSITY);				
+				}
+
+				device_.connected = true;	
 			}
+			catch (std::exception &error) {
+				cout << "Exception: Realsense connect error: " << error.what() << endl;
+				//ofLogError() << error.what();
+			}
+
 			//if (depth_sensor.supports(RS2_OPTION_LASER_POWER)) {
 			//	depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
 			//}

@@ -49,33 +49,47 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 			device_.connected = false;	//setting it true later only if success
 	
 			//Start streams
+			string stage = "---";
 			try {
+
+				stage = "Disable all streams";
 				c.disable_all_streams();
+				stage = "Enable depth stream";
 				if (S.use_depth) {
 					c.enable_stream(RS2_STREAM_DEPTH, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
 				}
+				stage = "Enable color stream";
 				if (S.use_rgb) {
 					c.enable_stream(RS2_STREAM_COLOR, S.rgb_w, S.rgb_h, RS2_FORMAT_ANY, S.rgb_fps);
 				}
+				stage = "Enable IR stream";
 				if (S.use_ir) {
 					c.enable_stream(RS2_STREAM_INFRARED, S.depth_w, S.depth_h, RS2_FORMAT_ANY, S.depth_fps);
 				}
-				__log__("resolution " + ofToString(w) + " " + ofToString(h) + " " + ofToString(fps));
+				//__log__("resolution " + ofToString(w) + " " + ofToString(h) + " " + ofToString(fps));
 
 				//---------------------------------
+				stage = "Enable device " + serial;
 				c.enable_device(serial);
 				// Start the pipeline with the configuration
+
+				stage = "Pipe start";
 				device_.profile = device_.pipe.start(c);
 
 				//disable emitter
+				stage = "Get selected device";
 				rs2::device selected_device = device_.profile.get_device();
+
+				stage = "Get depth sensor";
 				auto depth_sensor = selected_device.first<rs2::depth_sensor>();
 
+				stage = "Set using emitter";
 				if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
 					depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
 				}
 
 				//Setting preset
+				stage = "Set visual preset";
 				if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
 					depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
 
@@ -88,7 +102,7 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 				device_.connected = true;	
 			}
 			catch (std::exception &error) {
-				cout << "Exception: Realsense connect error: " << error.what() << endl;
+				cout << "Exception: Realsense connect error at stage: " << stage <<". Error text: " << error.what() << endl;
 				//ofLogError() << error.what();
 			}
 
@@ -117,7 +131,6 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 			depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); // Disable laser
 		}
 		*/
-
 
 			break;
 		}

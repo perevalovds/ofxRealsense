@@ -377,7 +377,12 @@ bool ofxRealsense::get_depth_pixels8(float min_dist, float max_dist, int &w, int
 	if (result) {
 		data.resize(w*h);
 		for (int i = 0; i < w*h; i++) {
-			data[i] = int(ofMap(data16[i] * device_.depth_scale_mm, min_dist, max_dist, 255, 0, true));
+			if (data16[i] > 0) {
+				data[i] = int(ofMap(data16[i] * device_.depth_scale_mm, min_dist, max_dist, 255, 0, true));
+			}
+			else {
+				data[i] = 0;
+			}
 		}
 		return true;
 	}

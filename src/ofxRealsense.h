@@ -74,6 +74,8 @@ struct ofxRealsense_Device
 {
 	bool connected = false;
 	rs2::frame depth;
+	float depth_scale_mm = 1;
+
 	rs2::colorizer colorize_frame;
 	rs2::pipeline pipe;
 	rs2::pipeline_profile profile;
@@ -118,7 +120,13 @@ public:
 	bool get_color_texture(ofTexture &texture);	//get color texture for connected device
 	bool get_ir_texture(ofTexture &texture);		//get ir texture for connected device
 
+	bool get_depth_pixels_mm(int &w, int &h, vector<float> &data);
+	bool get_depth_pixels_mm(int &w, int &h, vector<unsigned short> &data);
+	bool get_depth_pixels8(float min_dist, float max_dist, int &w, int &h, vector<unsigned char> &data);
+
+	//colored image, w*h*3
 	bool get_depth_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
+
 	bool get_color_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
 	bool get_ir_pixels_rgb(int &w, int &h, vector<unsigned char> &data);
 
@@ -137,4 +145,5 @@ protected:
 	bool frame_to_texture(const rs2::video_frame& frame, ofTexture &texture);
 	bool frame_to_pixels_rgb(const rs2::video_frame& frame, int &w, int &h, vector<unsigned char> &data);
 
+	bool get_depth16_raw(int &w, int &h, uint16_t* &data16);
 };

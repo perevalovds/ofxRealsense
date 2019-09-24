@@ -76,6 +76,14 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 				stage = "Pipe start";
 				device_.profile = device_.pipe.start(c);
 
+				//obtain depth_scale
+				if (S.use_depth) {
+					//https://github.com/IntelRealSense/librealsense/issues/2348
+					rs2::device dev = device_.profile.get_device();
+					rs2::depth_sensor ds = dev.query_sensors().front().as<rs2::depth_sensor>();
+					device_.depth_scale_mm = ds.get_depth_scale() * 1000;
+				}
+
 				//disable emitter
 				stage = "Get selected device";
 				rs2::device selected_device = device_.profile.get_device();
@@ -302,6 +310,78 @@ bool ofxRealsense::get_ir_texture(ofTexture &texture) {		//get ir texture for co
 		auto frame = device_.colorize_frame.process(device_.ir_frame).as<rs2::video_frame>();
 		return frame_to_texture(frame, texture);
 	}
+	return false;
+}
+
+//--------------------------------------------------------------
+bool ofxRealsense::get_depth16_raw(int &w, int &h, uint16_t* &data16) {
+	w = 0;
+	h = 0;
+	data16 = NULL;
+	if (!settings_.use_depth) return false;
+	if (device_.connected && device_.depth.get()) {
+		data16 = (uint16_t*)device_.depth.get_data(); //device_.depth.get_frame_data();
+		if (!data16) return false;
+		w = settings_.depth_w;		//TODO get straight from depth frame
+		h = settings_.depth_h;
+		return true;
+	}
+	return true;
+}
+
+//--------------------------------------------------------------
+bool ofxRealsense::get_depth_pixels_mm(int &w, int &h, vector<float> &data) {
+	w = 0;
+	h = 0;
+	data.clear();
+
+	uint16_t *data16;
+	bool result = get_depth16_raw(w, h, data16);
+	if (result) {
+		//https://github.com/IntelRealSense/librealsense/issues/2348
+		data.resize(w*h);
+		for (int i = 0; i < w*h; i++) {
+			data[i] = data16[i] * device_.depth_scale_mm;
+		}
+		return true;
+	}
+	return false;
+}
+
+//--------------------------------------------------------------
+bool ofxRealsense::get_depth_pixels_mm(int &w, int &h, vector<unsigned short> &data) {
+	w = 0;
+	h = 0;
+	data.clear();
+
+	uint16_t *data16;
+	bool result = get_depth16_raw(w, h, data16);
+	if (result) {
+		data.resize(w*h);
+		for (int i = 0; i < w*h; i++) {
+			data[i] = (unsigned short)(data16[i] * device_.depth_scale_mm);	//NOTE: currently we can avoid it, because scale==1
+		}
+		return true;
+	}
+	return false;
+}
+
+//--------------------------------------------------------------
+bool ofxRealsense::get_depth_pixels8(float min_dist, float max_dist, int &w, int &h, vector<unsigned char> &data) {
+	w = 0;
+	h = 0;
+	data.clear();
+
+	uint16_t *data16;
+	bool result = get_depth16_raw(w, h, data16);
+	if (result) {
+		data.resize(w*h);
+		for (int i = 0; i < w*h; i++) {
+			data[i] = int(ofMap(data16[i] * device_.depth_scale_mm, min_dist, max_dist, 255, 0, true));
+		}
+		return true;
+	}
+
 	return false;
 }
 

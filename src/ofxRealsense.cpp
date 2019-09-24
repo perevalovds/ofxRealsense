@@ -210,7 +210,7 @@ bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc) {				//get point cloud
 			auto *v = points.get_vertices();
 			for (int k = 0; k < size; k++) {
 				auto V = v[k];
-				pc[k] = glm::vec3(V.x * 1000, V.y * 1000, V.z * 1000);
+				pc[k] = glm::vec3(V.x * 1000, V.y * (-1000), V.z * 1000);
 			}
 		}
 		return true;

@@ -201,16 +201,19 @@ void ofxRealsense::update() {
 }
 
 //--------------------------------------------------------------
-bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc) {				//get point cloud for connected device i
+bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc, int mirrorx, int mirrory, int mirrorz) {				//get point cloud for connected device i
 	if (device_.connected && device_.depth.get()) {
 		rs2::points &points = device_.points;
 		int size = points.size();
 		pc.resize(size);
 		if (size > 0) {
+			float kx = (mirrorx) ? -1000 : 1000;
+			float ky = (mirrory) ? -1000 : 1000;
+			float kz = (mirrorz) ? -1000 : 1000;
 			auto *v = points.get_vertices();
 			for (int k = 0; k < size; k++) {
 				auto V = v[k];
-				pc[k] = glm::vec3(V.x * 1000, V.y * (-1000), V.z * 1000);
+				pc[k] = glm::vec3(V.x * kx, V.y * ky, V.z * kz);
 			}
 		}
 		return true;

@@ -115,7 +115,7 @@ public:
 	//not compute texture coordinates if not required
 
 
-	bool get_point_cloud(vector<glm::vec3> &pc);	//get point cloud for connected device
+	bool get_point_cloud(vector<glm::vec3> &pc, int mirrorx = 0, int mirrory = 0, int mirrorz = 0);	//get point cloud for connected device
 	bool get_depth_texture(ofTexture &texture);	//get depth texture for connected device
 	bool get_color_texture(ofTexture &texture);	//get color texture for connected device
 	bool get_ir_texture(ofTexture &texture);		//get ir texture for connected device

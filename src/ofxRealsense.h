@@ -52,7 +52,7 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 
 //Settings for starting device
 struct ofxRealsense_Settings {
-	int visual_preset = -1;	//-1 - Disable setting visual preset by default
+	int visual_preset = 1;	//-1 - Disable setting visual preset, 1 - Default
 
 	int use_depth = 1;
 	int use_ir = 1;

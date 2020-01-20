@@ -39,7 +39,10 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 	1920x1080
 	FPS: 6,15,30,60
 
-	Visual presets:
+	Visual presets
+	Table and more info: https://github.com/IntelRealSense/librealsense/wiki/D400-Series-Visual-Presets
+	Load from JSON: https://github.com/IntelRealSense/librealsense/issues/3037
+
 	RS2_RS400_VISUAL_PRESET_CUSTOM,            0
 	RS2_RS400_VISUAL_PRESET_DEFAULT,           1
 	RS2_RS400_VISUAL_PRESET_HAND,              2
@@ -52,7 +55,7 @@ Intel Realsense SDK link: https://github.com/IntelRealSense/librealsense
 
 //Settings for starting device
 struct ofxRealsense_Settings {
-	int visual_preset = 1;	//-1 - Disable setting visual preset, 1 - Default
+	int visual_preset = -1;	//-1 - Disable setting visual preset
 
 	int use_depth = 1;
 	int use_ir = 1;

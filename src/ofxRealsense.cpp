@@ -78,37 +78,38 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 
 				//obtain depth_scale
 				if (S.use_depth) {
+					stage = "Get selected device";
+					rs2::device selected_device = device_.profile.get_device();
+
+					stage = "Get depth sensor";
+					auto depth_sensor = selected_device.first<rs2::depth_sensor>();
+
+					//Setting preset
+					stage = "Set visual preset";
+					if (S.visual_preset > -1) {
+						if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
+							depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
+
+							//High accuracy preset
+							//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_ACCURACY);
+							//High density preset
+							//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_DENSITY);				
+						}
+					}
+
+					stage = "Obtain depth scale";
 					//https://github.com/IntelRealSense/librealsense/issues/2348
-					rs2::device dev = device_.profile.get_device();
-					rs2::depth_sensor ds = dev.query_sensors().front().as<rs2::depth_sensor>();
-					device_.depth_scale_mm = ds.get_depth_scale() * 1000;
-				}
+					//rs2::device dev = device_.profile.get_device();
+					//rs2::depth_sensor ds = dev.query_sensors().front().as<rs2::depth_sensor>();
+					device_.depth_scale_mm = depth_sensor.get_depth_scale() * 1000;
 
-				//disable emitter
-				stage = "Get selected device";
-				rs2::device selected_device = device_.profile.get_device();
+					
 
-				stage = "Get depth sensor";
-				auto depth_sensor = selected_device.first<rs2::depth_sensor>();
-
-				//Setting preset
-				stage = "Set visual preset";
-				if (S.visual_preset > -1) {
-					if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
-						depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
-
-						//High accuracy preset
-						//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_ACCURACY);
-						//High density preset
-						//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_DENSITY);				
+					stage = "Set using emitter";
+					if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
+						depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
 					}
 				}
-
-				stage = "Set using emitter";
-				if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
-					depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
-				}
-
 
 				device_.connected = true;	
 			}

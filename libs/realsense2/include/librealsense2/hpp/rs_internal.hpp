@@ -89,7 +89,37 @@ namespace rs2
         }
 
         /**
-        * Inject frame into the sensor
+        * Add motion stream to software sensor
+        *
+        * \param[in] motion   all the parameters that required to defind motion stream
+        */
+        stream_profile add_motion_stream(rs2_motion_stream motion_stream)
+        {
+            rs2_error* e = nullptr;
+
+            stream_profile stream(rs2_software_sensor_add_motion_stream(_sensor.get(), motion_stream, &e));
+            error::handle(e);
+
+            return stream;
+        }
+
+        /**
+        * Add pose stream to software sensor
+        *
+        * \param[in] pose   all the parameters that required to defind pose stream
+        */
+        stream_profile add_pose_stream(rs2_pose_stream pose_stream)
+        {
+            rs2_error* e = nullptr;
+
+            stream_profile stream(rs2_software_sensor_add_pose_stream(_sensor.get(), pose_stream, &e));
+            error::handle(e);
+
+            return stream;
+        }
+
+        /**
+        * Inject video frame into the sensor
         *
         * \param[in] frame   all the parameters that required to define video frame
         */
@@ -97,6 +127,30 @@ namespace rs2
         {
             rs2_error* e = nullptr;
             rs2_software_sensor_on_video_frame(_sensor.get(), frame, &e);
+            error::handle(e);
+        }
+
+        /**
+        * Inject motion frame into the sensor
+        *
+        * \param[in] frame   all the parameters that required to define motion frame
+        */
+        void on_motion_frame(rs2_software_motion_frame frame)
+        {
+            rs2_error* e = nullptr;
+            rs2_software_sensor_on_motion_frame(_sensor.get(), frame, &e);
+            error::handle(e);
+        }
+
+        /**
+        * Inject pose frame into the sensor
+        *
+        * \param[in] frame   all the parameters that required to define pose frame
+        */
+        void on_pose_frame(rs2_software_pose_frame frame)
+        {
+            rs2_error* e = nullptr;
+            rs2_software_sensor_on_pose_frame(_sensor.get(), frame, &e);
             error::handle(e);
         }
 
@@ -184,6 +238,21 @@ namespace rs2
             error::handle(e);
 
             return software_sensor(sensor);
+        }
+        
+        /**
+        * Add software device to existing context
+        * Any future queries on the context
+        * Will return this device
+        * This operation cannot be undone (except for destroying the context)
+        *
+        * \param[in] ctx   context to add the device to
+        */
+        void add_to(context& ctx)
+        {
+            rs2_error* e = nullptr;
+            rs2_context_add_software_device(ctx._context.get(), _dev.get(), &e);
+            error::handle(e);
         }
 
         /**

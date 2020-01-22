@@ -1,0 +1,1 @@
+rs-fw-update.exe -f Signed_Image_UVC_5_11_6_250.bin

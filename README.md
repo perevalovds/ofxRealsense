@@ -1,5 +1,6 @@
 # ofxRealsense - openFrameworks addon for working with Intel Realsense 415,435,435i cameras
 
+
 Author: Denis Perevalov
 
 ## Installing
@@ -25,6 +26,8 @@ Use mouse to rotate, scale and move point cloud, double click - reset to default
 ## Supported OS, oF version
 
 Windows 10, oF 0.10.1, Visual Studio C++ 2017, 64/32 bit
+
+Used Intel Realsense SDK version: Intel.RealSense.SDK-WIN10-2.30.0.1174.
 
 By default, addon is configured to 64 bit.
 

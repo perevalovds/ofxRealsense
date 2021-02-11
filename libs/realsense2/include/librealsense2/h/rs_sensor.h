@@ -33,6 +33,7 @@ typedef enum rs2_camera_info {
     RS2_CAMERA_INFO_PRODUCT_LINE                   , /**< Device product line D400/SR300/L500/T200 */
     RS2_CAMERA_INFO_ASIC_SERIAL_NUMBER             , /**< ASIC serial number */
     RS2_CAMERA_INFO_FIRMWARE_UPDATE_ID             , /**< Firmware update ID */
+    RS2_CAMERA_INFO_IP_ADDRESS                     , /**< IP address for remote camera. */
     RS2_CAMERA_INFO_COUNT                            /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
 } rs2_camera_info;
 const char* rs2_camera_info_to_string(rs2_camera_info info);
@@ -80,6 +81,12 @@ typedef enum rs2_format
     RS2_FORMAT_Y10BPACK        , /**< 16-bit per-pixel grayscale image unpacked from 10 bits per pixel packed ([8:8:8:8:2222]) grey-scale image. The data is unpacked to LSB and padded with 6 zero bits */
     RS2_FORMAT_DISTANCE        , /**< 32-bit float-point depth distance value.  */
     RS2_FORMAT_MJPEG           , /**< Bitstream encoding for video in which an image of each frame is encoded as JPEG-DIB   */
+    RS2_FORMAT_Y8I             , /**< 8-bit per pixel interleaved. 8-bit left, 8-bit right.  */
+    RS2_FORMAT_Y12I            , /**< 12-bit per pixel interleaved. 12-bit left, 12-bit right. Each pixel is stored in a 24-bit word in little-endian order. */
+    RS2_FORMAT_INZI            , /**< multi-planar Depth 16bit + IR 10bit.  */
+    RS2_FORMAT_INVI            , /**< 8-bit IR stream.  */
+    RS2_FORMAT_W10             , /**< Grey-scale image as a bit-packed array. 4 pixel data stream taking 5 bytes */
+    RS2_FORMAT_Z16H            , /**< Variable-length Huffman-compressed 16-bit depth values. */
     RS2_FORMAT_COUNT             /**< Number of enumeration values. Not a valid input: intended to be used in for-loops. */
 } rs2_format;
 const char* rs2_format_to_string(rs2_format format);
@@ -311,11 +318,19 @@ const char* rs2_get_notification_serialized_data(rs2_notification* notification,
 
 /**
 * check if physical subdevice is supported
-* \param[in] device  input RealSense device
+* \param[in] sensor  input RealSense subdevice
 * \param[out] error  if non-null, receives any error that occurs during this call, otherwise, errors are ignored
 * \return            list of stream profiles that given subdevice can provide, should be released by rs2_delete_profiles_list
 */
-rs2_stream_profile_list* rs2_get_stream_profiles(rs2_sensor* device, rs2_error** error);
+rs2_stream_profile_list* rs2_get_stream_profiles(rs2_sensor* sensor, rs2_error** error);
+
+/**
+* check how subdevice is streaming
+* \param[in] sensor  input RealSense subdevice
+* \param[out] error  if non-null, receives any error that occurs during this call, otherwise, errors are ignored
+* \return            list of stream profiles that given subdevice is currently streaming, should be released by rs2_delete_profiles_list
+*/
+rs2_stream_profile_list* rs2_get_active_streams(rs2_sensor* sensor, rs2_error** error);
 
 /**
 * Get pointer to specific stream profile
@@ -450,6 +465,17 @@ void rs2_register_extrinsics(const rs2_stream_profile* from,
     rs2_extrinsics extrin, rs2_error** error);
 
 /**
+ * \brief Override extrinsics of a given sensor that supports calibrated_sensor.
+ *
+ * This will affect extrinsics at the source device and may affect multiple profiles. Used for DEPTH_TO_RGB calibration.
+ *
+* \param[in] sensor       The sensor
+* \param[in] extrinsics   Extrinsics from Depth to the named sensor
+* \param[out] error       If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+*/
+void rs2_override_extrinsics( const rs2_sensor* sensor, const rs2_extrinsics* extrinsics, rs2_error** error );
+
+/**
  * When called on a video profile, returns the intrinsics of specific stream configuration
  * \param[in] mode          input stream profile
  * \param[out] intrinsics   resulting intrinsics for the video profile
@@ -521,7 +547,7 @@ const rs2_raw_data_buffer* rs2_export_localization_map(const rs2_sensor* sensor,
 int rs2_set_static_node(const rs2_sensor* sensor, const char* guid, const rs2_vector pos, const rs2_quaternion orient, rs2_error** error);
 
 /**
-* Create a named location tag
+* Retrieve a named location tag
 * \param[in]  sensor    T2xx position-tracking sensor
 * \param[in]  guid      Null-terminated string of up to 127 characters
 * \param[out] pos       Position in meters of the tagged (stored) location
@@ -530,6 +556,15 @@ int rs2_set_static_node(const rs2_sensor* sensor, const char* guid, const rs2_ve
 * \return               Non-zero if succeeded, otherwise 0
 */
 int rs2_get_static_node(const rs2_sensor* sensor, const char* guid, rs2_vector *pos, rs2_quaternion *orient, rs2_error** error);
+
+/**
+* Remove a named location tag
+* \param[in]  sensor    T2xx position-tracking sensor
+* \param[in]  guid      Null-terminated string of up to 127 characters
+* \param[out] error     If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+* \return               Non-zero if succeeded, otherwise 0
+*/
+int rs2_remove_static_node(const rs2_sensor* sensor, const char* guid, rs2_error** error);
 
 /** Load Wheel odometer settings from host to device
 * \param[in] odometry_config_buf   odometer configuration/calibration blob serialized from jsom file
@@ -556,6 +591,17 @@ int rs2_send_wheel_odometry(const rs2_sensor* sensor, char wo_sensor_id, unsigne
 void rs2_set_intrinsics(const rs2_sensor* sensor, const rs2_stream_profile* profile , const rs2_intrinsics* intrinsics, rs2_error** error);
 
 /**
+ * \brief Override intrinsics of a given sensor that supports calibrated_sensor.
+ *
+ * This will affect intrinsics at the source and may affect multiple profiles. Used for DEPTH_TO_RGB calibration.
+ *
+* \param[in] sensor       The RealSense device
+* \param[in] intrinsics   Intrinsics value to be written to the sensor
+* \param[out] error       If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+*/
+void rs2_override_intrinsics( const rs2_sensor* sensor, const rs2_intrinsics* intrinsics, rs2_error** error );
+
+/**
  * Set extrinsics between two sensors
  * \param[in]  from_sensor  Origin sensor
  * \param[in]  from_profile Origin profile
@@ -565,6 +611,32 @@ void rs2_set_intrinsics(const rs2_sensor* sensor, const rs2_stream_profile* prof
  * \param[out] error        If non-null, receives any error that occurs during this call, otherwise, errors are ignored
  */
 void rs2_set_extrinsics(const rs2_sensor* from_sensor, const rs2_stream_profile* from_profile, rs2_sensor* to_sensor, const rs2_stream_profile* to_profile, const rs2_extrinsics* extrinsics, rs2_error** error);
+
+/**
+ * Get the DSM parameters for a sensor
+ * \param[in]  sensor        Sensor that supports the CALIBRATED_SENSOR extension
+ * \param[out] p_params_out  Pointer to the structure that will get the DSM parameters
+ * \param[out] error         If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+ */
+void rs2_get_dsm_params( rs2_sensor const * sensor, rs2_dsm_params * p_params_out, rs2_error** error );
+
+/**
+ * Set the sensor DSM parameters
+ * This should ideally be done when the stream is NOT running. If it is, the
+ * parameters may not take effect immediately.
+ * \param[in]  sensor        Sensor that supports the CALIBRATED_SENSOR extension
+ * \param[out] p_params      Pointer to the structure that contains the DSM parameters
+ * \param[out] error         If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+ */
+void rs2_override_dsm_params( rs2_sensor const * sensor, rs2_dsm_params const * p_params, rs2_error** error );
+
+/**
+ * Reset the sensor DSM parameters
+ * This should ideally be done when the stream is NOT running. May not take effect immediately.
+ * \param[in]  sensor        Sensor that supports the CALIBRATED_SENSOR extension
+ * \param[out] error         If non-null, receives any error that occurs during this call, otherwise, errors are ignored
+ */
+void rs2_reset_sensor_calibration( rs2_sensor const * sensor, rs2_error** error );
 
 /**
 * Set motion device intrinsics

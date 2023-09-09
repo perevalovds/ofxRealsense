@@ -216,7 +216,7 @@ bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc, int mirrorx, int mirro
 			float kz = (mirrorz) ? -1000 : 1000;
 			auto *v = points.get_vertices();
 			for (int k = 0; k < size; k++) {
-				auto V = v[k];
+				auto& V = v[k];
 				pc[k] = glm::vec3(V.x * kx, V.y * ky, V.z * kz);
 			}
 		}

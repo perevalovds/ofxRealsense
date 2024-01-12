@@ -174,6 +174,10 @@ void ofxRealsense::update() {
 			frameNew_ = true;
 			if (S.use_depth) {
 				auto depth = frameset.get_depth_frame();
+				
+				// Hack shift of depth for calibration
+				shift_depth_frame_values(depth, depth_shift_value_);
+
 				device_.points = device_.pc.calculate(depth);			//TODO not compute texture coordinates
 				device_.depth = depth;
 			}
@@ -334,6 +338,57 @@ bool ofxRealsense::get_depth16_raw(int &w, int &h, uint16_t* &data16) {
 		return true;
 	}
 	return true;
+}
+
+//--------------------------------------------------------------
+// Hack to calibrate camera by shifting depth values
+void ofxRealsense::set_depth_shift(int shift_value)
+{
+	depth_shift_value_ = shift_value;
+}
+
+//--------------------------------------------------------------
+// Hack to calibrate camera by shifting depth values
+// It changes "const frame", so is potentially unsafe
+void ofxRealsense::shift_depth_frame_values(const rs2::depth_frame& depth, int shift_value)
+{	
+	if (shift_value == 0)
+		return;
+
+	// Check that data is uint16_t
+	if (depth.get_bytes_per_pixel() != 2) {
+		string s = "Error: ofxRealsense::shift_depth_frame_values() expects uint16_t data, exiting now...";
+		cout << s << endl;
+		ofSystemAlertDialog(s);
+		OF_EXIT_APP(0);
+	}
+	uint16_t* data = (uint16_t*)depth.get_data();
+
+	int w = depth.get_width();
+	int h = depth.get_height();
+	int stride = depth.get_stride_in_bytes() / sizeof(uint16_t);
+	//int size = depth.get_data_size() / sizeof(unsigned short);
+	for (int y = 0; y < h; y++)	{
+		int k = y * stride;
+
+		if (shift_value > 0)
+		{
+			for (int x = 0; x < w; x++) {
+				auto& d = data[k++];
+				if (d) {	// Не меняем нулевые
+					d = min(shift_value + d, 65535);
+				}
+			}
+		}
+		else {
+			for (int x = 0; x < w; x++) {
+				auto& d = data[k++];
+				if (d) {    // Не меняем нулевые
+					d = max(shift_value + d, 0);
+				}
+			}
+		}
+	}
 }
 
 //--------------------------------------------------------------

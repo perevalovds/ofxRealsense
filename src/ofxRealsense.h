@@ -116,6 +116,9 @@ public:
 	//TODO optimization
 	//not compute texture coordinates if not required
 
+	// Scale to calibrate depth camera, 1.f by default
+	void set_depth_scale(float scale_value);
+
 	// Hack to calibrate camera by shifting depth values
 	void set_depth_shift(int shift_value);
 
@@ -153,6 +156,7 @@ protected:
 
 	// Hack to calibrate camera by shifting depth values
 	// It changes "const& depth", so is potentially unsafe
+	float depth_scale_value_ = 1.f;
 	int depth_shift_value_ = 0;
 	void shift_depth_frame_values(const rs2::depth_frame& depth, int shift_value);
 };

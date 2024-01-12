@@ -218,6 +218,10 @@ bool ofxRealsense::get_point_cloud(vector<glm::vec3> &pc, int mirrorx, int mirro
 			float kx = (mirrorx) ? -1000 : 1000;
 			float ky = (mirrory) ? -1000 : 1000;
 			float kz = (mirrorz) ? -1000 : 1000;
+			kx *= depth_scale_value_;
+			ky *= depth_scale_value_;
+			kz *= depth_scale_value_;
+
 			auto *v = points.get_vertices();
 			for (int k = 0; k < size; k++) {
 				auto& V = v[k];
@@ -338,6 +342,13 @@ bool ofxRealsense::get_depth16_raw(int &w, int &h, uint16_t* &data16) {
 		return true;
 	}
 	return true;
+}
+
+//--------------------------------------------------------------
+// Scale to calibrate depth camera, 1.f by default
+void ofxRealsense::set_depth_scale(float scale_value)
+{
+	depth_scale_value_ = scale_value;
 }
 
 //--------------------------------------------------------------

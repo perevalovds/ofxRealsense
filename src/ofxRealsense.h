@@ -69,6 +69,8 @@ struct ofxRealsense_Settings {
 	int rgb_w = 640;
 	int rgb_h = 480;
 	int rgb_fps = 30;
+	
+	int laser_power_max = 0;	// If 1, then set laser power to max
 };
 
 

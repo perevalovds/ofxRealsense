@@ -103,11 +103,26 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 					//rs2::depth_sensor ds = dev.query_sensors().front().as<rs2::depth_sensor>();
 					device_.depth_scale_mm = depth_sensor.get_depth_scale() * 1000;
 
-					
-
 					stage = "Set using emitter";
 					if (depth_sensor.supports(RS2_OPTION_EMITTER_ENABLED)) {
 						depth_sensor.set_option(RS2_OPTION_EMITTER_ENABLED, S.use_emitter);//on/off emitter
+					}
+
+					// Set laser power
+					if (S.laser_power_max) {	// If 1, then set laser power to max							
+						//https://github.com/IntelRealSense/librealsense/wiki/API-How-To					
+						stage = "Set laser power to max";
+						if (depth_sensor.supports(RS2_OPTION_LASER_POWER))
+						{
+							// Query min and max values:
+							auto range = depth_sensor.get_option_range(RS2_OPTION_LASER_POWER);
+							// Set max power
+							depth_sensor.set_option(RS2_OPTION_LASER_POWER, range.max);
+							// To Disable laser: depth_sensor.set_option(RS2_OPTION_LASER_POWER, 0.f); 
+						}
+						else {
+							cout << "Realsense warning: Can't set laser power to max, because device doesn't supports this" << endl;
+						}
 					}
 				}
 

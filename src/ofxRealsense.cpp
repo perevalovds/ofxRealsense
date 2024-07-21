@@ -86,6 +86,7 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 
 					//Setting preset
 					stage = "Set visual preset";
+					cout << "   " << stage << endl;	// Sometimes it freezes here
 					if (S.visual_preset > -1) {
 						if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
 							depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);

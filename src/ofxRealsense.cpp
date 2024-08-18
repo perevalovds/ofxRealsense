@@ -16,8 +16,9 @@ vector<string> ofxRealsense::get_serials() {	//get list of availble devices seri
 
 	rs2::context ctx;    // Create librealsense context for managing devices
 
+	auto query_devices = ctx.query_devices();
 	// Initial population of the device list
-	for (auto&& dev : ctx.query_devices()) // Query the list of connected RealSense devices
+	for (auto&& dev : query_devices) // Query the list of connected RealSense devices
 	{
 		list.push_back(dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER));
 	}
@@ -34,12 +35,13 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 
 	auto &ctx = ofxRealsense_ctx;
 
-	int n = ctx.query_devices().size();
+	auto query_devices = ctx.query_devices();
+	int n = query_devices.size();
 	vector<bool> used(n, false);
 
 	//search
 	int k = 0;
-	for (auto&& dev : ctx.query_devices()) // Query the list of connected RealSense devices
+	for (auto&& dev : query_devices) // Query the list of connected RealSense devices
 	{
 		if (!used[k] && dev.get_info(RS2_CAMERA_INFO_SERIAL_NUMBER) == serial) {
 			cout << "RealSense device starting: " << serial << endl;
@@ -89,7 +91,12 @@ void ofxRealsense::setup(string serial, const ofxRealsense_Settings &settings) {
 					cout << "   " << stage << endl;	// Sometimes it freezes here
 					if (S.visual_preset > -1) {
 						if (depth_sensor.supports(RS2_OPTION_VISUAL_PRESET)) {
-							depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
+							try {
+								depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, S.visual_preset);
+							}
+							catch (...) {
+								cout << "Realsense camera error: Can't set preset " << S.visual_preset << "!" << endl;
+							}
 
 							//High accuracy preset
 							//depth_sensor.set_option(RS2_OPTION_VISUAL_PRESET, RS2_RS400_VISUAL_PRESET_HIGH_ACCURACY);

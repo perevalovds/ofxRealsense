@@ -23,9 +23,9 @@ extern "C" {
 #include "h/rs_sensor.h"
 
 #define RS2_API_MAJOR_VERSION    2
-#define RS2_API_MINOR_VERSION    30
+#define RS2_API_MINOR_VERSION    36
 #define RS2_API_PATCH_VERSION    0
-#define RS2_API_BUILD_VERSION    1174
+#define RS2_API_BUILD_VERSION    2034
 
 #ifndef STRINGIFY
 #define STRINGIFY(arg) #arg
@@ -41,6 +41,7 @@ extern "C" {
 #define RS2_API_VERSION  (((RS2_API_MAJOR_VERSION) * 10000) + ((RS2_API_MINOR_VERSION) * 100) + (RS2_API_PATCH_VERSION))
 /* Return version in "X.Y.Z" format */
 #define RS2_API_VERSION_STR (VAR_ARG_STRING(RS2_API_MAJOR_VERSION.RS2_API_MINOR_VERSION.RS2_API_PATCH_VERSION))
+#define RS2_API_FULL_VERSION_STR (VAR_ARG_STRING(RS2_API_MAJOR_VERSION.RS2_API_MINOR_VERSION.RS2_API_PATCH_VERSION.RS2_API_BUILD_VERSION))
 
 /**
 * get the size of rs2_raw_data_buffer
@@ -74,6 +75,16 @@ int rs2_get_api_version(rs2_error** error);
 void rs2_log_to_console(rs2_log_severity min_severity, rs2_error ** error);
 
 void rs2_log_to_file(rs2_log_severity min_severity, const char * file_path, rs2_error ** error);
+
+void rs2_log_to_callback_cpp( rs2_log_severity min_severity, rs2_log_callback * callback, rs2_error ** error );
+
+void rs2_log_to_callback( rs2_log_severity min_severity, rs2_log_callback_ptr callback, void * arg, rs2_error** error );
+
+
+unsigned rs2_get_log_message_line_number( rs2_log_message const * msg, rs2_error** error );
+const char * rs2_get_log_message_filename( rs2_log_message const * msg, rs2_error** error );
+const char * rs2_get_raw_log_message( rs2_log_message const * msg, rs2_error** error );
+const char * rs2_get_full_log_message( rs2_log_message const * msg, rs2_error** error );
 
 /**
  * Add custom message into librealsense log
